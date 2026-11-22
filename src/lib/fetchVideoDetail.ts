@@ -33,7 +33,7 @@ export async function fetchVideoDetail({
           item.source.toString() === source.toString() &&
           item.id.toString() === id.toString()
       );
-      if (exactMatch) {
+      if (exactMatch && exactMatch.episodes.length > 0) {
         return exactMatch;
       }
     } catch (error) {

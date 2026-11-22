@@ -84,6 +84,16 @@
     "xiaomaomi": {
       "api": "https://zy.xmm.hk/api.php/provide/vod",
       "name": "小猫咪资源"
+    },
+    "streammovie": {
+      "api": "https://raw.githubusercontent.com/m3u8playlist/dp/master/iplayr/stream-movie.json",
+      "name": "StreamMovie (TVpods)",
+      "type": "iplayr"
+    },
+    "yspxptv": {
+      "api": "https://raw.githubusercontent.com/freefly353/ysp-live-xptv/main/ysp-live-xptv.js",
+      "name": "央视频直播 (XPTV)",
+      "type": "xptv"
     }
   }
 }

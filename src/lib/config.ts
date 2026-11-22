@@ -5,11 +5,15 @@ import { getStorage } from '@/lib/db';
 import { AdminConfig } from './admin.types';
 import runtimeConfig from './runtime';
 
+export type SourceType = 'maccms' | 'iplayr' | 'xptv';
+
 export interface ApiSite {
   key: string;
   api: string;
   name: string;
   detail?: string;
+  // 源类型：maccms=采集接口（默认），iplayr=TVpods/iPlayr 规则 JSON，xptv=XPTV 蜘蛛 JS
+  type?: SourceType;
 }
 
 interface ConfigFileStruct {
@@ -105,6 +109,7 @@ async function initConfig() {
             name: site.name,
             api: site.api,
             detail: site.detail,
+            type: site.type,
             from: 'config',
             disabled: false,
           });
@@ -213,6 +218,7 @@ async function initConfig() {
             name: site.name,
             api: site.api,
             detail: site.detail,
+            type: site.type,
             from: 'config',
             disabled: false,
           })),
@@ -261,6 +267,7 @@ async function initConfig() {
         name: site.name,
         api: site.api,
         detail: site.detail,
+        type: site.type,
         from: 'config',
         disabled: false,
       })),
@@ -322,6 +329,7 @@ export async function getConfig(): Promise<AdminConfig> {
         existingSource.name = site.name;
         existingSource.api = site.api;
         existingSource.detail = site.detail;
+        existingSource.type = site.type;
         existingSource.from = 'config';
       } else {
         // 如果不存在，创建新条目
@@ -330,6 +338,7 @@ export async function getConfig(): Promise<AdminConfig> {
           name: site.name,
           api: site.api,
           detail: site.detail,
+          type: site.type,
           from: 'config',
           disabled: false,
         });
@@ -450,6 +459,7 @@ export async function resetConfig() {
       name: site.name,
       api: site.api,
       detail: site.detail,
+      type: site.type,
       from: 'config',
       disabled: false,
     })),
@@ -490,5 +500,6 @@ export async function getAvailableApiSites(): Promise<ApiSite[]> {
     name: s.name,
     api: s.api,
     detail: s.detail,
+    type: s.type,
   }));
 }

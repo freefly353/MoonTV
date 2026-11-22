@@ -1,6 +1,8 @@
 import { API_CONFIG, ApiSite, getConfig } from '@/lib/config';
+import { detailIPlayr, searchIPlayr } from '@/lib/iplayr';
 import { SearchResult } from '@/lib/types';
 import { cleanHtmlTags } from '@/lib/utils';
+import { detailXptv, searchXptv } from '@/lib/xptv';
 
 interface ApiSearchItem {
   vod_id: string;
@@ -19,6 +21,13 @@ export async function searchFromApi(
   apiSite: ApiSite,
   query: string
 ): Promise<SearchResult[]> {
+  // 按源类型分发：iplayr（TVpods 规则）/ xptv（蜘蛛 JS）/ maccms（采集接口，默认）
+  if (apiSite.type === 'iplayr') {
+    return searchIPlayr(apiSite, query);
+  }
+  if (apiSite.type === 'xptv') {
+    return searchXptv(apiSite, query);
+  }
   try {
     const apiBaseUrl = apiSite.api;
     const apiUrl =
@@ -194,6 +203,13 @@ export async function getDetailFromApi(
   apiSite: ApiSite,
   id: string
 ): Promise<SearchResult> {
+  // 按源类型分发（须在 detail 特殊处理之前）
+  if (apiSite.type === 'iplayr') {
+    return detailIPlayr(apiSite, id);
+  }
+  if (apiSite.type === 'xptv') {
+    return detailXptv(apiSite, id);
+  }
   if (apiSite.detail) {
     return handleSpecialSourceDetail(id, apiSite);
   }

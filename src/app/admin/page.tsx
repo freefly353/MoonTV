@@ -68,6 +68,7 @@ interface DataSource {
   key: string;
   api: string;
   detail?: string;
+  type?: 'maccms' | 'iplayr' | 'xptv';
   disabled?: boolean;
   from: 'config' | 'custom';
 }
@@ -648,6 +649,7 @@ const VideoSourceConfig = ({
     key: '',
     api: '',
     detail: '',
+    type: 'maccms',
     disabled: false,
     from: 'config',
   });
@@ -721,6 +723,7 @@ const VideoSourceConfig = ({
       name: newSource.name,
       api: newSource.api,
       detail: newSource.detail,
+      type: newSource.type || 'maccms',
     })
       .then(() => {
         setNewSource({
@@ -728,6 +731,7 @@ const VideoSourceConfig = ({
           key: '',
           api: '',
           detail: '',
+          type: 'maccms',
           disabled: false,
           from: 'custom',
         });
@@ -787,6 +791,11 @@ const VideoSourceConfig = ({
         </td>
         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
           {source.key}
+          {source.type && source.type !== 'maccms' && (
+            <span className='ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'>
+              {source.type}
+            </span>
+          )}
         </td>
         <td
           className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[12rem] truncate'
@@ -897,7 +906,25 @@ const VideoSourceConfig = ({
               }
               className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
             />
+            <select
+              value={newSource.type || 'maccms'}
+              onChange={(e) =>
+                setNewSource((prev) => ({
+                  ...prev,
+                  type: e.target.value as DataSource['type'],
+                }))
+              }
+              className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+            >
+              <option value='maccms'>采集接口（MacCMS）</option>
+              <option value='iplayr'>TVpods / iPlayr 规则</option>
+              <option value='xptv'>XPTV 蜘蛛 JS</option>
+            </select>
           </div>
+          <p className='text-xs text-gray-500 dark:text-gray-400'>
+            TVpods / iPlayr：API 地址填规则 JSON 的 URL；XPTV：API 地址填蜘蛛 JS
+            的 URL。
+          </p>
           <div className='flex justify-end'>
             <button
               onClick={handleAddSource}

@@ -59,15 +59,20 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'add': {
-        const { key, name, api, detail } = body as {
+        const { key, name, api, detail, type } = body as {
           key?: string;
           name?: string;
           api?: string;
           detail?: string;
+          type?: string;
         };
         if (!key || !name || !api) {
           return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
         }
+        const SOURCE_TYPES = ['maccms', 'iplayr', 'xptv'] as const;
+        const sourceType = SOURCE_TYPES.includes(type as any)
+          ? (type as (typeof SOURCE_TYPES)[number])
+          : 'maccms';
         if (adminConfig.SourceConfig.some((s) => s.key === key)) {
           return NextResponse.json({ error: '该源已存在' }, { status: 400 });
         }
@@ -76,6 +81,7 @@ export async function POST(request: NextRequest) {
           name,
           api,
           detail,
+          type: sourceType,
           from: 'custom',
           disabled: false,
         });

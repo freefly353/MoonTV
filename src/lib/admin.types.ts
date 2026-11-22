@@ -21,6 +21,8 @@ export interface AdminConfig {
     name: string;
     api: string;
     detail?: string;
+    // 源类型：maccms=采集接口（默认），iplayr=TVpods/iPlayr 规则 JSON，xptv=XPTV 蜘蛛 JS
+    type?: 'maccms' | 'iplayr' | 'xptv';
     from: 'config' | 'custom';
     disabled?: boolean;
   }[];
