@@ -27,6 +27,23 @@ interface XptvSpider {
 const SPIDER_CACHE_TTL = 10 * 60 * 1000;
 const spiderCache = new Map<string, { ts: number; spider: XptvSpider }>();
 
+// Edge 运行时（Cloudflare Workers / Vercel Edge）禁止 new Function 动态求值，
+// XPTV 蜘蛛在这些运行时上无法执行，探测一次后直接禁用并给出明确提示。
+let evalSupportedCache: boolean | null = null;
+function isEvalSupported(): boolean {
+  if (evalSupportedCache !== null) return evalSupportedCache;
+  try {
+    new Function('return 1')();
+    evalSupportedCache = true;
+  } catch (_) {
+    evalSupportedCache = false;
+  }
+  return evalSupportedCache;
+}
+
+export const XPTV_UNSUPPORTED_MSG =
+  'XPTV 源在当前运行时不受支持（Edge 禁止动态代码执行），请改用 Node 部署';
+
 function makeCacheShim() {
   const store = new Map<string, string>();
   return {
@@ -64,6 +81,9 @@ function makeFetchShim() {
 }
 
 async function loadSpider(site: ApiSite): Promise<XptvSpider> {
+  if (!isEvalSupported()) {
+    throw new Error(XPTV_UNSUPPORTED_MSG);
+  }
   const now = Date.now();
   const hit = spiderCache.get(site.api);
   if (hit && now - hit.ts < SPIDER_CACHE_TTL) {
