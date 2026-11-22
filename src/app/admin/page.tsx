@@ -653,6 +653,21 @@ const VideoSourceConfig = ({
     disabled: false,
     from: 'config',
   });
+  // Edge 运行时不支持 XPTV（禁止动态代码执行），隐藏该类型选项
+  const [xptvSupported, setXptvSupported] = useState(true);
+  useEffect(() => {
+    fetch('/api/server-config')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && d.XptvSupported === false) {
+          setXptvSupported(false);
+          setNewSource((prev) =>
+            prev.type === 'xptv' ? { ...prev, type: 'maccms' } : prev
+          );
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   // dnd-kit 传感器
   const sensors = useSensors(
@@ -918,12 +933,14 @@ const VideoSourceConfig = ({
             >
               <option value='maccms'>采集接口（MacCMS）</option>
               <option value='iplayr'>TVpods / iPlayr 规则</option>
-              <option value='xptv'>XPTV 蜘蛛 JS</option>
+              {xptvSupported && <option value='xptv'>XPTV 蜘蛛 JS</option>}
             </select>
           </div>
           <p className='text-xs text-gray-500 dark:text-gray-400'>
-            TVpods / iPlayr：API 地址填规则 JSON 的 URL；XPTV：API 地址填蜘蛛 JS
-            的 URL。
+            TVpods / iPlayr：API 地址填规则 JSON 的 URL
+            {xptvSupported
+              ? '；XPTV：API 地址填蜘蛛 JS 的 URL。'
+              : '。当前运行时（Edge）不支持 XPTV 蜘蛛 JS。'}
           </p>
           <div className='flex justify-end'>
             <button

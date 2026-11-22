@@ -6,6 +6,7 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 import { getStorage } from '@/lib/db';
 import { IStorage } from '@/lib/types';
+import { isXptvSupported, XPTV_UNSUPPORTED_MSG } from '@/lib/xptv';
 
 export const runtime = 'edge';
 
@@ -73,6 +74,12 @@ export async function POST(request: NextRequest) {
         const sourceType = SOURCE_TYPES.includes(type as any)
           ? (type as (typeof SOURCE_TYPES)[number])
           : 'maccms';
+        if (sourceType === 'xptv' && !isXptvSupported()) {
+          return NextResponse.json(
+            { error: XPTV_UNSUPPORTED_MSG },
+            { status: 400 }
+          );
+        }
         if (adminConfig.SourceConfig.some((s) => s.key === key)) {
           return NextResponse.json({ error: '该源已存在' }, { status: 400 });
         }

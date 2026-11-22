@@ -30,7 +30,7 @@ const spiderCache = new Map<string, { ts: number; spider: XptvSpider }>();
 // Edge 运行时（Cloudflare Workers / Vercel Edge）禁止 new Function 动态求值，
 // XPTV 蜘蛛在这些运行时上无法执行，探测一次后直接禁用并给出明确提示。
 let evalSupportedCache: boolean | null = null;
-function isEvalSupported(): boolean {
+export function isXptvSupported(): boolean {
   if (evalSupportedCache !== null) return evalSupportedCache;
   try {
     new Function('return 1')();
@@ -81,7 +81,7 @@ function makeFetchShim() {
 }
 
 async function loadSpider(site: ApiSite): Promise<XptvSpider> {
-  if (!isEvalSupported()) {
+  if (!isXptvSupported()) {
     throw new Error(XPTV_UNSUPPORTED_MSG);
   }
   const now = Date.now();
