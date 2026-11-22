@@ -30,6 +30,8 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  // 单源筛选：'all' 表示全部源，否则为源 key
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
 
   // 获取默认聚合设置：只读取用户本地设置，默认为 true
   const getDefaultAggregate = () => {
@@ -46,10 +48,31 @@ function SearchPageClient() {
     return getDefaultAggregate() ? 'agg' : 'all';
   });
 
+  // 按源筛选后的结果
+  const filteredResults = useMemo(() => {
+    if (sourceFilter === 'all') return searchResults;
+    return searchResults.filter((item) => item.source === sourceFilter);
+  }, [searchResults, sourceFilter]);
+
+  // 结果中出现的源列表（用于单源筛选）
+  const sourceOptions = useMemo(() => {
+    const map = new Map<string, { key: string; name: string; count: number }>();
+    searchResults.forEach((item) => {
+      const entry = map.get(item.source) || {
+        key: item.source,
+        name: item.source_name || item.source,
+        count: 0,
+      };
+      entry.count += 1;
+      map.set(item.source, entry);
+    });
+    return Array.from(map.values());
+  }, [searchResults]);
+
   // 聚合后的结果（按标题和年份分组）
   const aggregatedResults = useMemo(() => {
     const map = new Map<string, SearchResult[]>();
-    searchResults.forEach((item) => {
+    filteredResults.forEach((item) => {
       // 使用 title + year + type 作为键，year 必然存在，但依然兜底 'unknown'
       const key = `${item.title.replaceAll(' ', '')}-${
         item.year || 'unknown'
@@ -90,7 +113,7 @@ function SearchPageClient() {
         }
       }
     });
-  }, [searchResults]);
+  }, [filteredResults]);
 
   useEffect(() => {
     // 无搜索参数时聚焦搜索框
@@ -162,6 +185,7 @@ function SearchPageClient() {
   const fetchSearchResults = async (query: string) => {
     try {
       setIsLoading(true);
+      setSourceFilter('all');
       const response = await fetch(
         `/api/search?q=${encodeURIComponent(query.trim())}`
       );
@@ -295,6 +319,34 @@ function SearchPageClient() {
                   </div>
                 </label>
               </div>
+              {/* 单源筛选 */}
+              {sourceOptions.length > 1 && (
+                <div className='mb-6 flex flex-wrap gap-2'>
+                  <button
+                    onClick={() => setSourceFilter('all')}
+                    className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                      sourceFilter === 'all'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-500/10 hover:bg-gray-300 text-gray-700 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300'
+                    }`}
+                  >
+                    全部源 ({searchResults.length})
+                  </button>
+                  {sourceOptions.map((opt) => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setSourceFilter(opt.key)}
+                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                        sourceFilter === opt.key
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-500/10 hover:bg-gray-300 text-gray-700 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300'
+                      }`}
+                    >
+                      {opt.name} ({opt.count})
+                    </button>
+                  ))}
+                </div>
+              )}
               <div
                 key={`search-results-${viewMode}`}
                 className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
@@ -315,7 +367,7 @@ function SearchPageClient() {
                         </div>
                       );
                     })
-                  : searchResults.map((item) => (
+                  : filteredResults.map((item) => (
                       <div
                         key={`all-${item.source}-${item.id}`}
                         className='w-full'
@@ -339,9 +391,11 @@ function SearchPageClient() {
                         />
                       </div>
                     ))}
-                {searchResults.length === 0 && (
+                {filteredResults.length === 0 && (
                   <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
-                    未找到相关结果
+                    {searchResults.length === 0
+                      ? '未找到相关结果'
+                      : '该源无结果'}
                   </div>
                 )}
               </div>
