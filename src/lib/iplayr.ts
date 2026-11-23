@@ -42,7 +42,7 @@ async function fetchJson(url: string): Promise<any> {
   return resp.json();
 }
 
-function detectManifest(json: any): Manifest {
+export function detectManifest(json: any): Manifest {
   // dp import.json 格式：{ vods: [{ title, url, type, ... }] }，type=8 为 iPlayr 规则
   const list = Array.isArray(json?.vods)
     ? json.vods
